@@ -10,12 +10,19 @@ from multiprocessing import Pool, cpu_count
 import scipy.integrate as spi
 import time
 
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["OPENBLAS_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
+# Local projections
+LD = 4
 
-t_f0 = 10**10
-t_f = 10**5
+DV = 0.9
+Cl = 0.086
+Cr = 0.2
+Cm = Cl * Cr * DV * (np.sqrt(2) + (Cl + Cr) * DV) / (2 - (Cl + Cr) ** 2 * DV * 2)
+
+# Identity & Pauli matrices
+id = np.array([[1, 0], [0, 1]])
+sx = np.array([[0, 1], [1, 0]])
+sy = np.array([[0, -1j], [1j, 0]])
+sz = np.array([[1, 0], [0, -1]])
 
 Bx = 0
 gs = 2
@@ -26,41 +33,22 @@ Vbias = 0
 T = 0.1  # K
 kb = 0.08617343  # meV/K
 
-Vl0 = 0
-Vr0 = 0
-
-# Identity & Pauli matrices
-id = np.matrix([[1, 0], [0, 1]])
-sx = np.matrix([[0, 1], [1, 0]])
-sy = np.matrix([[0, -1j], [1j, 0]])
-sz = np.matrix([[1, 0], [0, -1]])
-
-# Local projections
-LD = 4
-
-DV = 0.9
-Cl = 0.086
-Cr = 0.2
-Cm = Cl*Cr*DV*(np.sqrt(2) + (Cl + Cr)*DV)/(2 - (Cl + Cr)**2*DV*2)
-
-
-
 def ec(Nl, Nr, eps, delta_Vl, delta_Vr):
     # we are interested in quadruple point
     # (0,0), (1h,1e), (1h,0), (0, 1e)
     Vl = -.5 * eps + delta_Vl
     Vr = .5 * eps + delta_Vr
 
-    return 1/(2*(Cm*Cr + Cl*Cm + Cl*Cr))*((Cr + Cm)*(Nl-Cl*Vl)**2 + (Cl + Cm) * (Nr - Cr*Vr)**2 + + 2*Cm*(Nl - Cl*Vl)*(Nr - Cr*Vr))
+    return 1/(2*(Cm * Cr + Cl * Cm + Cl * Cr))*((Cr + Cm)*(Nl-Cl*Vl)**2 + (Cl + Cm) * (Nr - Cr*Vr)**2 + + 2*Cm*(Nl - Cl*Vl)*(Nr - Cr*Vr))
 
 
 # ham of electron dot
 # basis Kup, Kdown, K'up, K'down
 # so in np.kron first entry is valley, second entry is spin
 def ham_e(Bz, Bx, gs=2, gv=14, soc=0.07):
-    H = np.asmatrix(np.zeros((LD, LD)))
+    H = np.zeros((LD, LD), dtype=complex)
 
-    # soc
+    # SOC
     H += .5 * soc * np.kron(sz, sz)
 
     # Zeeman
@@ -108,14 +96,14 @@ def fco10(ER, e00, e11, e10, e01, Gr):
 
 def rates(eps, delta_Vl, delta_Vr, Bz=0.4, Bx=0, gs=2, gv=14, soc=0.07, Vbias=0):
     # tunnel rates times electron charge (in pA)
-    Gl = 0.1 * soc / 18 * 17 /20
-    Gr = 0.1 * soc / 18 * 17 /20
+    Gl = 0.1 * soc / 18 * 17 / 20
+    Gr = 0.1 * soc / 18 * 17 / 20
 
     # dephasing rate
     Gd = 0.575 * soc/2
 
     # tunnel coupling
-    t = .05 * soc*1
+    t = .05 * soc * 1
 
     # valley flip tunneling
     t_vf = 0.05 * soc / 10
@@ -176,9 +164,9 @@ def rates(eps, delta_Vl, delta_Vr, Bz=0.4, Bx=0, gs=2, gv=14, soc=0.07, Vbias=0)
             # s in Kup, Kdown, K'up, K'down
             for s in range(LD):
                 o += vh[ih][s] * ve[ie][s]
-                ovf += vh[ih][s%LD] * ve[ie][(s+2)%LD]
+                ovf += vh[ih][s % LD] * ve[ie][(s+2) % LD]
             olap[ih, ie] = o ** 2
-            olap_vf[ih,ie] = ovf ** 2
+            olap_vf[ih, ie] = ovf ** 2
 
     # (0,0) -> (-1, 1)
 
@@ -190,12 +178,12 @@ def rates(eps, delta_Vl, delta_Vr, Bz=0.4, Bx=0, gs=2, gv=14, soc=0.07, Vbias=0)
             ei = e00  # initial energy
             ef = e11 + wh[jh] + we[je]  # final energy
             if ei >= ef or True:
-                rate[ind11(jh, je), 0] = 2. * t ** 2 * olap[jh, je] * 1 / np.sqrt(2 * np.pi * Gd ** 2) * np.exp(
-                   -(ef - ei) ** 2 / (2 * Gd ** 2))
+                rate[ind11(jh, je), 0] = (2. * t ** 2 * olap[jh, je] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
+                                          np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
                 # rate[ind11(jh, je), 0] = t ** 2 * olap[jh, je] * (G/np.pi)/((ef-ei)**2 + G**2)
                 # valley flip interdot tunneling
-                rate[ind11(jh,je),0] += 2 * t_vf **2 * olap_vf[jh, je] * 1 / np.sqrt(2 * np.pi * Gd ** 2) * np.exp(
-                -(ef - ei) ** 2 / (2 * Gd ** 2))
+                rate[ind11(jh,je),0] += (2 * t_vf **2 * olap_vf[jh, je] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
+                                         np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
                 # rate[ind11(jh, je), 0] += t_vf ** 2 * olap_vf[jh, je] * (G/np.pi)/((ef-ei)**2 + G**2)
             # if ei > ef:
             #     rate[ind11(jh, je), 0] += 0.00 * t**2 * olap[jh, je]/Gd
@@ -206,12 +194,12 @@ def rates(eps, delta_Vl, delta_Vr, Bz=0.4, Bx=0, gs=2, gv=14, soc=0.07, Vbias=0)
             ei = e11 + wh[ih] + we[ie]
             ef = e00
             if ei >= ef or True:
-                rate[0, ind11(ih, ie)] = 2. * t ** 2 * olap[ih, ie] * 1 / np.sqrt(2 * np.pi * Gd ** 2) * np.exp(
-                   -(ef - ei) ** 2 / (2 * Gd ** 2))
+                rate[0, ind11(ih, ie)] = (2. * t ** 2 * olap[ih, ie] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
+                                          np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
                 # rate[0, ind11(ih, ie)] = t ** 2 * olap[ih, ie] * (G/np.pi)/((ef-ei)**2 + G**2)
                 # valley flip interdot tunneling
-                rate[0,ind11(ih,ie)] += 2 * t_vf **2 * olap_vf[ih, ie] * 1 / np.sqrt(2 * np.pi * Gd ** 2) * np.exp(
-                -(ef - ei) ** 2 / (2 * Gd ** 2))
+                rate[0, ind11(ih, ie)] += (2 * t_vf ** 2 * olap_vf[ih, ie] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
+                                           np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
                 # rate[0, ind11(ih, ie)] += t_vf ** 2 * olap_vf[ih, ie]* (G/np.pi)/((ef-ei)**2 + G**2)
             # if ei > ef:
             #     rate[0, ind11(ih, ie)] += 0.00 * t**2 * olap[ih,ie] / Gd
@@ -312,13 +300,13 @@ def rates(eps, delta_Vl, delta_Vr, Bz=0.4, Bx=0, gs=2, gv=14, soc=0.07, Vbias=0)
             E11 = e11 + wh[jh] + we[je]  # final energy
             E10 = e10 + wh[jh]
             E01 = e01 + we[je]
-            if E10 > E00 and E01 > E00 and E10 +m*Gr> E11 and E01 +m*Gl> E11:
+            if E10 > E00 and E01 > E00 and E10 + m * Gr > E11 and E01 +m * Gl> E11:
                 integral_10, _ = spi.quad(fco10, 0 - n * kb * T, np.abs(E11 - E00) + n * kb * T,
                                           args=(E00, E11, E10, E01,Gr))
                 tco10 = Gl * Gr * integral_10  # Co-tunneling amplitude
 
                 integral_01, _ = spi.quad(fco01, -np.abs(E11 - E00) - n * kb * T, 0 + n * kb * T,
-                                          args=(E00, E11, E10, E01,Gr))
+                                          args=(E00, E11, E10, E01, Gr))
                 tco01 = Gl * Gr * integral_01
                 rate[0, ind11(jh, je)] = rate[0, ind11(jh, je)] + tco10  # (1,1) -> (0,0)
                 rate[ind11(jh, je), 0] = rate[ind11(jh, je), 0] + tco01  # (0,0) -> (1,1)
@@ -401,24 +389,6 @@ def rates(eps, delta_Vl, delta_Vr, Bz=0.4, Bx=0, gs=2, gv=14, soc=0.07, Vbias=0)
 
     return rate
 
-
-rate0 = rates(0, Vl0, Vr0)
-# print(rate0)
-P0 = np.zeros(25)
-P0[0] = 1
-P0 = np.dot(expm(rate0 * t_f0), P0)
-print(P0)
-
-split = 250
-delta_Vl = np.linspace(-6, -4.5, split)
-delta_Vr = np.linspace(1.5, 3, split)
-DVL, DVR = np.meshgrid(delta_Vl, delta_Vr)
-
-P = np.zeros(25)
-PLOT = np.zeros((split, split))
-
-args_list = [(i, 0, DVL[i], DVR[i], t_f, P0) for i in range(split)]
-
 # for i in range(split):
 #     for j in range(split):
 #         rate = rates(0, DVL[i, j], DVR[i, j])
@@ -431,20 +401,22 @@ def compute_PLOT_element(i, eps, DVL_row, DVR_row, t_f, P0):
     for j in range(len(DVR_row)):
         rate = rates(eps, DVL_row[j], DVR_row[j])
         P = np.dot(expm(rate * t_f), P0)
-        row_vals[j] = 1 * np.sum(P[1:17]) - 0.2 * np.sum(P[17:21]) + 1.2 * np.sum(P[21:])
+        row_vals[j] = (1 - np.sum(P[1:17])) + 0.2 * np.sum(P[17:21]) - 1.2 * np.sum(P[21:])
     return i, row_vals
 
-def compute_PLOT_parallel():
-    with Pool(processes=cpu_count()) as pool:
+def compute_PLOT_parallel(args_list, PLOT, num_cpus=20):
+    with Pool(num_cpus) as pool:
         results = pool.starmap(compute_PLOT_element, args_list)
 
     for i, vals in results:
         PLOT[i, :] = vals
 
-def plot_PLOT():
+def plot_PLOT(DVL, DVR, PLOT, dir=None):
     plt.pcolormesh(DVL, DVR, PLOT,
                    cmap="viridis_r", shading="auto", rasterized=True)
     plt.colorbar()
+    print(dir)
+    plt.savefig(os.path.join(dir, 'map.svg'))
     plt.show()
 
 
@@ -483,14 +455,45 @@ def plot_PLOT():
 #
 # print(d)
 
+def main(params=None, pulse_dir=1):
+    t_f0 = 10 ** 10
+    t_us = 2
+    t_f = t_us * 10 ** 5
+
+    if pulse_dir == 1:
+        Vl0 = 0
+        Vr0 = 0
+    elif pulse_dir == -1:
+        Vl0 = -12
+        Vr0 = 12
+
+    rate0 = rates(0, Vl0, Vr0)
+    # print(rate0)
+    P0 = np.zeros(25)
+    P0[0] = 1
+    P0 = np.dot(expm(rate0 * t_f0), P0)
+    print(P0)
+
+    split = 250
+    delta_Vl = np.linspace(-8, -2.5, split)
+    delta_Vr = np.linspace(0, 4.5, split)
+    DVL, DVR = np.meshgrid(delta_Vl, delta_Vr)
+
+    P = np.zeros(25)
+    PLOT = np.zeros((split, split))
+
+    args_list = [(i, 0, DVL[i], DVR[i], t_f, P0) for i in range(split)]
+
+    current_dir = os.getcwd()
+
+    compute_PLOT_parallel(PLOT=PLOT, args_list=args_list)
+    plot_PLOT(DVL=DVL, DVR=DVR, PLOT=PLOT, dir=current_dir)
 
 
 if __name__ == '__main__':
     initial_time = time.time()
 
-
-    compute_PLOT_parallel()
-    plot_PLOT()
+    main(pulse_dir=-1)
 
     final_time = time.time()
     time = (final_time - initial_time) #/ 3600
