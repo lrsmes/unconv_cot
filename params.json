@@ -1,11 +1,23 @@
 [
   {
+    "t_f0" : 10,
     "t_us" : 1,
-    "B_z" : 0.4,
     "t" : 0.05,
     "t_vf" : 0.05,
     "Gd" : 0.575,
-    "delta_Vl" : ,
-
+    "Gl" : 0.1,
+    "Gr" : 0.1,
+    "Bz" : 0.4,
+    "Bx" : 0,
+    "gs" : 2,
+    "gv" : 14,
+    "soc" : 0.07,
+    "Vbias" : 0,
+    "delta_Vl_start" : -8,
+    "delta_Vl_stop" : -2.5,
+    "delta_Vr_start" : 0,
+    "delta_Vr_stop" : 4.5,
+    "split" : 250,
+    "pulse_dir": 1
   }
 ]

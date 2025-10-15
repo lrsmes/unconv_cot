@@ -19,7 +19,7 @@ conda activate unconv_co
 case $answer in
     [Yy]* )
         # If yes, run the first Python script to create the parameter file
-        python create_sim_params.py
+        python create_simTWO_params.py
         ;;
     [Nn]* )
         echo "Skipping parameter file creation."
@@ -31,4 +31,4 @@ case $answer in
 esac
 
 # run the training
-OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u /home/lmester/unconv_cot/sim_code.py
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 python -u /home/lmester/unconv_cot/simTWO.py

@@ -1,22 +1,23 @@
 import os
 import sys
 import matplotlib.pyplot as plt
-import autograd.numpy as np
+import numpy as np
 import warnings
 import matplotlib.ticker as mticker
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize, ListedColormap, LinearSegmentedColormap
-from matplotlib_scalebar.scalebar import ScaleBar
+#from matplotlib_scalebar.scalebar import ScaleBar
 from PIL import Image
 from scipy import constants as co
 from matplotlib.ticker import MaxNLocator
-from matplotlib.cm import bwr, coolwarm, viridis, twilight_shifted
+from cmap import Colormap
+#from matplotlib.cm import bwr, coolwarm, viridis, twilight_shifted
 
 def load_npys():
 
-    file_0T = '\\Users\Mester.INSTITUT2B\\PycharmProjects\\Animations\\0T_both_dir\\'
-    file_400mT = '\\Users\Mester.INSTITUT2B\\PycharmProjects\\Animations\\400mT_both_dir\\'
-    file_theo = '\\Users\Mester.INSTITUT2B\\PycharmProjects\\Animations\\New_parameters_probabilities\\'
+    file_0T = '\\Users\\Mester.INSTITUT2B\\PycharmProjects\\Animations\\0T_both_dir\\'
+    file_400mT = '\\Users\\Mester.INSTITUT2B\\PycharmProjects\\Animations\\400mT_both_dir\\'
+    file_theo = '\\Users\\Mester.INSTITUT2B\\PycharmProjects\\Animations\\New_parameters_probabilities\\'
     file_dir = os.getcwd()
 
     map_0T_block = np.load(os.path.join(file_0T, '1_1857_map.npy'))
@@ -49,9 +50,9 @@ def load_npys():
 
 
 def generate_fig03():
-    file_0T = '\\Users\Mester.INSTITUT2B\\PycharmProjects\\Animations\\0T_both_dir\\'
-    file_400mT = '\\Users\Mester.INSTITUT2B\\PycharmProjects\\Animations\\400mT_both_dir\\'
-    file_theo = '\\Users\Mester.INSTITUT2B\\PycharmProjects\\Animations\\New_parameters_probabilities\\'
+    file_0T = '\\Users\\Mester.INSTITUT2B\\PycharmProjects\\Animations\\0T_both_dir\\'
+    file_400mT = '\\Users\\Mester.INSTITUT2B\\PycharmProjects\\Animations\\400mT_both_dir\\'
+    file_theo = '\\Users\\Mester.INSTITUT2B\\PycharmProjects\\unconv_cot\\'
     file_dir = os.getcwd()
 
     map_0T_block = np.load(os.path.join(file_0T, '1_1857_map.npy'))
@@ -62,13 +63,13 @@ def generate_fig03():
     X_0T_trans = np.load(os.path.join(file_0T, '-1_190_FG14.npy'))
     Y_0T_trans = np.load(os.path.join(file_0T, '-1_190_FG12.npy'))
 
-    map_0T_block_theo = np.load(os.path.join(file_theo, 'Bz=0.4\\Starting_11\\t=1.6\\Bz_0.4_t_1.6_P00.npy'))
-    # X_0T_block_theo = np.load(os.path.join(file_theo, ' Bz=0\\Starting_11\\t={}.npy'))
-    # Y_0T_block_theo = np.load(os.path.join(file_theo, ' Bz=0\\Starting_11\\t={}.npy'))
+    map_0T_block_theo = np.load(os.path.join(file_theo, 'blockade_vs_tus\\map_0.129.npy'))
+    X_0T_block_theo = np.load(os.path.join(file_theo, 'blockade_vs_tus\\DVL_0.129.npy'))
+    Y_0T_block_theo = np.load(os.path.join(file_theo, 'blockade_vs_tus\\DVR_0.129.npy'))
 
-    map_0T_trans_theo = np.load(os.path.join(file_theo, 'Bz=0.4\\Starting_00\\t=0.4\\Bz_0.4_t_0.4_P00.npy'))
-    # X_0T_trans_theo = np.load(os.path.join(file_theo, 'Bz=0\\Starting_00\\t={}.npy'))
-    # Y_0T_trans_theo = np.load(os.path.join(file_theo, 'Bz=0\\Starting_00\\t={}.npy'))
+    map_0T_trans_theo = np.load(os.path.join(file_theo, 'transport_vs_tus\\map_0.0155.npy'))
+    X_0T_trans_theo = np.load(os.path.join(file_theo, 'transport_vs_tus\\DVL_0.0155.npy'))
+    Y_0T_trans_theo = np.load(os.path.join(file_theo, 'transport_vs_tus\\DVR_0.0155.npy'))
 
     map_400mT_block = np.load(os.path.join(file_400mT, '1_2950_map.npy'))
     X_400mT_block = np.load(os.path.join(file_400mT, '1_2950_FG14.npy'))
@@ -78,9 +79,9 @@ def generate_fig03():
     X_400mT_trans = np.load(os.path.join(file_400mT, '-1_2240_FG14.npy'))
     Y_400mT_trans = np.load(os.path.join(file_400mT, '-1_2240_FG12.npy'))
 
-    map_400mT_trans_theo = np.load(os.path.join(file_theo, 'npys\\Bz=0.4\\Starting_00\\t=0.4.npy'))
-    # X_400mT_trans_theo = np.load(os.path.join(file_theo, 'Bz=0.4\\Starting_00\\t={}.npy'))
-    # Y_400mT_trans_theo = np.load(os.path.join(file_theo, 'Bz=0.4\\Starting_00\\t={}.npy'))
+    map_400mT_trans_theo = np.load(os.path.join(file_theo, 'transport_vs_tus_400mT\\map_0.11.npy'))
+    X_400mT_trans_theo = np.load(os.path.join(file_theo, 'transport_vs_tus_400mT\\DVL_0.11.npy'))
+    Y_400mT_trans_theo = np.load(os.path.join(file_theo, 'transport_vs_tus_400mT\\DVR_0.11.npy'))
 
 
     plt.rcParams.update({'font.size': 7.5})
@@ -89,6 +90,7 @@ def generate_fig03():
     warnings.filterwarnings('ignore')
     fig = plt.figure(figsize=(1 * 8.50 * cm, 1. * 10. * cm), dpi=869)
     fig_fac = 1.0
+    cmap = "viridis_r" #Colormap('bids:fake_parula').to_mpl()
 
     positions = [
         (0.125, 0.71, 0.365 * fig_fac, 0.28),  # blockade 0T experiment
@@ -101,7 +103,7 @@ def generate_fig03():
 
     # (a)
     ax00 = fig.add_axes(positions[0])
-    c1 = ax00.pcolormesh(X_0T_block, Y_0T_block, map_0T_block, cmap="viridis_r", shading="auto", rasterized=True)
+    c1 = ax00.pcolormesh(X_0T_block, Y_0T_block, map_0T_block, cmap=cmap, shading="auto", rasterized=True)
     cbar = fig.colorbar(c1, ax=ax00, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
     cbar.set_ticks([0, 1])
     cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
@@ -124,54 +126,13 @@ def generate_fig03():
     ax00.text(5.191, 5.269, r'B=0', fontsize=7, color='white')
 
     ax01 = fig.add_axes(positions[1])
-    c1 = ax01.pcolormesh(X_0T_trans, Y_0T_trans, map_0T_trans, cmap="viridis_r", shading="auto", rasterized=True)
+    c1 = ax01.pcolormesh(X_0T_block_theo, Y_0T_block_theo ,map_0T_block_theo, cmap=cmap, shading="auto", rasterized=True)
     cbar = fig.colorbar(c1, ax=ax01, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
     cbar.set_ticks([0, 1])
     cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
-    cbar.ax.text(-0.1, 3, r"$R_{dem}$(a.u.)", fontsize=7, va='center', ha='right', transform=cbar.ax.transAxes,
+    cbar.ax.text(-0.1, 3, r"$P_{(1e,1h)}$", fontsize=7, va='center', ha='right', transform=cbar.ax.transAxes,
                  rotation=0)
     ax01.tick_params(axis='both', which='major', pad=1, direction='in')
-    ax01.set_xticks([5.17, 5.18])
-    ax01.set_yticks([5.28, 5.29])
-    # ax01.set_ylabel(r"$FG_{2} (V)$")
-    # ax01.set_xlabel(r"$FG_{1} (V)$")
-    #ax01.text(-0.25, 1.14, labels[1], transform=ax01.transAxes, fontsize=9, fontweight='bold')
-    # ax.set_aspect('equal')
-    # ax.tick_params(axis='both', direction='in', length=5, labelsize=8, width=1.5)
-    # ax.text(5.18, 5.264, r'$t_{read} =$' + r'${} \mu s$'.format(np.round(read_block[i] * 125 * 1e-6, 2)),
-    #        fontsize=6, color='white')
-    ax01.text(5.1775, 5.278, r'(1e,1h)', fontsize=6, color='black')
-    ax01.text(5.172, 5.292, r'(0e,0h)', fontsize=6, color='white')
-    ax01.text(5.182, 5.291, r'(1e,0h)', fontsize=6, color='black')
-    ax01.text(5.17, 5.279, r'(0e,1h)', fontsize=6, color='white')
-    ax01.text(5.1845, 5.2775, r'B=0', fontsize=7, color='black')
-
-    ax10 = fig.add_axes(positions[2])
-    c1 = ax10.pcolormesh(map_0T_block_theo, cmap="viridis_r", shading="auto", rasterized=True)
-    cbar = fig.colorbar(c1, ax=ax10, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
-    cbar.set_ticks([0, 1])
-    cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
-    cbar.ax.text(-0.1, 3, r"$R_{dem}$(a.u.)", fontsize=7, va='center', ha='right', transform=cbar.ax.transAxes,
-                 rotation=0)
-    ax10.tick_params(axis='both', which='major', pad=1, direction='in')
-    # ax10.set_xticks([5.18])
-    # ax10.set_yticks([5.26, 5.27])
-    ax10.set_ylabel(r"$FG_{2} (V)$", labelpad=1)
-    # ax10.set_xlabel(r"$FG_{1} (V)$")
-    #ax10.text(-0.45, 1.14, labels[2], transform=ax10.transAxes, fontsize=9, fontweight='bold')
-    # ax.set_aspect('equal')
-    # ax.tick_params(axis='both', direction='in', length=5, labelsize=8, width=1.5)
-    # ax.text(5.18, 5.264, r'$t_{read} =$' + r'${} \mu s$'.format(np.round(read_block[i] * 125 * 1e-6, 2)),
-    #        fontsize=6, color='white')
-
-    ax11 = fig.add_axes(positions[3])
-    c1 = ax11.pcolormesh(map_0T_trans_theo, cmap="viridis_r", shading="auto", rasterized=True)
-    cbar = fig.colorbar(c1, ax=ax11, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
-    cbar.set_ticks([0, 1])
-    cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
-    cbar.ax.text(-0.1, 3, r"$R_{dem}$(a.u.)", fontsize=7, va='center', ha='right', transform=cbar.ax.transAxes,
-                 rotation=0)
-    ax11.tick_params(axis='both', which='major', pad=1, direction='in')
     # ax11.set_xticks([5.18])
     # ax11.set_yticks([5.26, 5.27])
     # ax11.set_ylabel(r"$FG_{2} (V)$")
@@ -181,9 +142,60 @@ def generate_fig03():
     # ax.tick_params(axis='both', direction='in', length=5, labelsize=8, width=1.5)
     # ax.text(5.18, 5.264, r'$t_{read} =$' + r'${} \mu s$'.format(np.round(read_block[i] * 125 * 1e-6, 2)),
     #        fontsize=6, color='white')
+    ax01.text(1.0, -3.75, r'(1e,1h)', fontsize=6, color='white')
+    ax01.text(-0.75, -1.75, r'(0e,0h)', fontsize=6, color='black')
+    ax01.text(1.5, -2.5, r'(1e,0h)', fontsize=6, color='white')
+    ax01.text(-0.75, -5, r'(0e,1h)', fontsize=6, color='black')
+    ax01.text(1.85, -4.25, r'B=0', fontsize=7, color='white')
+
+    ax10 = fig.add_axes(positions[2])
+    c1 = ax10.pcolormesh(X_0T_trans, Y_0T_trans, map_0T_trans, cmap=cmap, shading="auto", rasterized=True)
+    cbar = fig.colorbar(c1, ax=ax10, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
+    cbar.set_ticks([0, 1])
+    cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
+    cbar.ax.text(-0.1, 3, r"$R_{dem}$(a.u.)", fontsize=7, va='center', ha='right', transform=cbar.ax.transAxes,
+                 rotation=0)
+    ax10.tick_params(axis='both', which='major', pad=1, direction='in')
+    ax10.set_xticks([5.17, 5.18])
+    ax10.set_yticks([5.28, 5.29])
+    ax10.set_ylabel(r"$FG_{2} (V)$", labelpad=1)
+    # ax01.set_xlabel(r"$FG_{1} (V)$")
+    #ax01.text(-0.25, 1.14, labels[1], transform=ax01.transAxes, fontsize=9, fontweight='bold')
+    # ax.set_aspect('equal')
+    # ax.tick_params(axis='both', direction='in', length=5, labelsize=8, width=1.5)
+    # ax.text(5.18, 5.264, r'$t_{read} =$' + r'${} \mu s$'.format(np.round(read_block[i] * 125 * 1e-6, 2)),
+    #        fontsize=6, color='white')
+    ax10.text(5.1775, 5.278, r'(1e,1h)', fontsize=6, color='black')
+    ax10.text(5.172, 5.292, r'(0e,0h)', fontsize=6, color='white')
+    ax10.text(5.182, 5.291, r'(1e,0h)', fontsize=6, color='black')
+    ax10.text(5.17, 5.279, r'(0e,1h)', fontsize=6, color='white')
+    ax10.text(5.1845, 5.2775, r'B=0', fontsize=7, color='black')
+
+    ax11 = fig.add_axes(positions[3])
+    c1 = ax11.pcolormesh(X_0T_trans_theo, Y_0T_trans_theo, map_0T_trans_theo, cmap=cmap, shading="auto", rasterized=True)
+    cbar = fig.colorbar(c1, ax=ax11, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
+    cbar.set_ticks([0, 1])
+    cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
+    cbar.ax.text(-0.1, 3, r"$P_{(0e,0h)}$", fontsize=7, va='center', ha='right', transform=cbar.ax.transAxes,
+                 rotation=0)
+    ax11.tick_params(axis='both', which='major', pad=1, direction='in')
+    # ax10.set_xticks([5.18])
+    # ax10.set_yticks([5.26, 5.27])
+    # ax11.set_ylabel(r"$FG_{2} (V)$", labelpad=1)
+    # ax10.set_xlabel(r"$FG_{1} (V)$")
+    #ax10.text(-0.45, 1.14, labels[2], transform=ax10.transAxes, fontsize=9, fontweight='bold')
+    # ax.set_aspect('equal')
+    # ax.tick_params(axis='both', direction='in', length=5, labelsize=8, width=1.5)
+    # ax.text(5.18, 5.264, r'$t_{read} =$' + r'${} \mu s$'.format(np.round(read_block[i] * 125 * 1e-6, 2)),
+    #        fontsize=6, color='white')
+    ax11.text(0.75, -4.65, r'(1e,1h)', fontsize=6, color='black')
+    ax11.text(-0.05, -2.9, r'(0e,0h)', fontsize=6, color='white')
+    ax11.text(1.5, -2.85, r'(1e,0h)', fontsize=6, color='black')
+    ax11.text(-0.4, -4.5, r'(0e,1h)', fontsize=6, color='white')
+    ax11.text(1.65, -4.75, r'B=0', fontsize=7, color='black')
 
     ax20 = fig.add_axes(positions[4])
-    c1 = ax20.pcolormesh(X_400mT_trans, Y_400mT_trans, map_400mT_trans, cmap="viridis_r", shading="auto",
+    c1 = ax20.pcolormesh(X_400mT_trans, Y_400mT_trans, map_400mT_trans, cmap=cmap, shading="auto",
                          rasterized=True)
     cbar = fig.colorbar(c1, ax=ax20, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
     cbar.set_ticks([0, 1])
@@ -207,12 +219,12 @@ def generate_fig03():
     ax20.text(5.1705, 5.2812, r'B$\neq$0', fontsize=7, color='white')
 
     ax21 = fig.add_axes(positions[5])
-    c1 = ax21.pcolormesh(map_400mT_trans_theo,
-                         cmap="viridis_r", shading="auto", rasterized=True)
+    c1 = ax21.pcolormesh(X_400mT_trans_theo, Y_400mT_trans_theo, map_400mT_trans_theo,
+                         cmap=cmap, shading="auto", rasterized=True)
     cbar = fig.colorbar(c1, ax=ax21, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
     cbar.set_ticks([0, 1])
     cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
-    cbar.ax.text(-0.1, 3, r"$R_{dem}$(a.u.)", fontsize=7, va='center', ha='right', transform=cbar.ax.transAxes,
+    cbar.ax.text(-0.1, 3, r"$P_{(0e,0h)}$", fontsize=7, va='center', ha='right', transform=cbar.ax.transAxes,
                  rotation=0)
     ax21.tick_params(axis='both', which='major', pad=1, direction='in')
     # ax21.set_xticks([5.18])
@@ -224,6 +236,16 @@ def generate_fig03():
     # ax.tick_params(axis='both', direction='in', length=5, labelsize=8, width=1.5)
     # ax.text(5.18, 5.264, r'$t_{read} =$' + r'${} \mu s$'.format(np.round(read_block[i] * 125 * 1e-6, 2)),
     #        fontsize=6, color='white')
+    ax21.text(1.25, -4.1, r'(1e,1h)', fontsize=6, color='black')
+    ax21.text(-0.05, -2.35, r'(0e,0h)', fontsize=6, color='white')
+    ax21.text(1.05, -2, r'(1e,0h)', fontsize=6, color='black')
+    ax21.text(-0.65, -3.25, r'(0e,1h)', fontsize=6, color='white')
+    ax21.text(-0.55, -1.7, r'B$\neq$0', fontsize=7, color='white')
+
+    #plt.tight_layout()
+    print(file_dir)
+    plt.savefig(os.path.join(file_dir, 'fig03.pdf'))
+    plt.savefig(os.path.join(file_dir, 'fig03.svg'))
 
     plt.show()
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="b0d326f5-d131-4b9f-8860-3df07a96efc6" name="SimPC">
+        <fileTransfer accessType="SFTP" host="134.61.8.242" port="22" sshConfigId="2fcf13fd-ce51-4ac4-a064-bb101f865665" sshConfig="lmester@134.61.8.242:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
