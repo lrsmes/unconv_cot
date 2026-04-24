@@ -46,7 +46,7 @@ labels = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)']
 
 
 ax00 = axes[0, 0]
-c1 = ax00.pcolormesh(X_0T_block, Y_0T_block, map_0T_block, cmap="viridis_r", shading="auto", rasterized=True)
+c1 = ax00.pcolormesh(X_0T_block, Y_0T_block, map_0T_block, cmap="plasma", shading="auto", rasterized=True)
 cbar = fig.colorbar(c1, ax=ax00, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
 cbar.set_ticks([0, 1])
 cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
@@ -68,7 +68,7 @@ ax00.text(5.172, 5.263, r'(0e,1h)', fontsize=6, color='black')
 ax00.text(5.191, 5.269, r'B=0', fontsize=7, color='white')
 
 ax01 = axes[0, 1]
-c1 = ax01.pcolormesh(X_0T_trans, Y_0T_trans, map_0T_trans, cmap="viridis_r", shading="auto", rasterized=True)
+c1 = ax01.pcolormesh(X_0T_trans, Y_0T_trans, map_0T_trans, cmap="Reds", shading="auto", rasterized=True)
 cbar = fig.colorbar(c1, ax=ax01, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
 cbar.set_ticks([0, 1])
 cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
@@ -90,7 +90,7 @@ ax01.text(5.17, 5.279, r'(0e,1h)', fontsize=6, color='white')
 ax01.text(5.1845, 5.2775, r'B=0', fontsize=7, color='black')
 
 ax10 = axes[1, 0]
-c1 = ax10.pcolormesh(map_0T_block_theo, cmap="viridis_r", shading="auto", rasterized=True)
+c1 = ax10.pcolormesh(map_0T_block_theo, cmap="Reds", shading="auto", rasterized=True)
 cbar = fig.colorbar(c1, ax=ax10, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
 cbar.set_ticks([0, 1])
 cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
@@ -107,7 +107,7 @@ ax10.text(-0.45, 1.14, labels[2], transform=ax10.transAxes, fontsize=9, fontweig
 #        fontsize=6, color='white')
 
 ax11 = axes[1, 1]
-c1 = ax11.pcolormesh(map_0T_trans_theo, cmap="viridis_r", shading="auto", rasterized=True)
+c1 = ax11.pcolormesh(map_0T_trans_theo, cmap="Blues", shading="auto", rasterized=True)
 cbar = fig.colorbar(c1, ax=ax11, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
 cbar.set_ticks([0, 1])
 cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
@@ -124,7 +124,7 @@ ax11.text(-0.25, 1.14, labels[3], transform=ax11.transAxes, fontsize=9, fontweig
 #        fontsize=6, color='white')
 
 ax20 = axes[2, 0]
-c1 = ax20.pcolormesh(X_400mT_trans, Y_400mT_trans, map_400mT_trans, cmap="viridis_r", shading="auto", rasterized=True)
+c1 = ax20.pcolormesh(X_400mT_trans, Y_400mT_trans, map_400mT_trans, cmap="Blues", shading="auto", rasterized=True)
 cbar = fig.colorbar(c1, ax=ax20, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
 cbar.set_ticks([0, 1])
 cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)
@@ -147,7 +147,7 @@ ax20.text(5.1705, 5.2812, r'B$\neq$0', fontsize=7, color='white')
 
 ax21 = axes[2, 1]
 c1 = ax21.pcolormesh(map_400mT_trans_theo,
-                     cmap="viridis_r", shading="auto", rasterized=True)
+                     cmap="Blues", shading="auto", rasterized=True)
 cbar = fig.colorbar(c1, ax=ax21, location='top', shrink=0.3, aspect=15, pad=0.035, anchor=(1.0, 0.0))
 cbar.set_ticks([0, 1])
 cbar.ax.tick_params(direction='in', length=1.5, pad=0.04)

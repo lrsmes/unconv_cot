@@ -5,12 +5,17 @@ import json
 import numpy as np
 import numpy.linalg as linalg
 import matplotlib.pyplot as plt
+import skimage as ski
 from scipy.linalg import expm
 from multiprocessing import Pool, cpu_count
 from scipy.optimize import fsolve
+from matplotlib.path import Path
+from scipy.spatial import ConvexHull
 import scipy.integrate as spi
 import matplotlib.colors as colors
 import time
+
+#from shapely.creation import points
 
 # Local projections
 LD = 4
@@ -57,7 +62,7 @@ def ham_e(Bz, Bx, gs=2, gv=14.0, soc=0.07, dkk=0.02):
     H += 0.5 * mu_B * gv * Bz * np.kron(sz, id)
 
     # Intervalley scattering Δ_KK' couples valleys
-    H += dkk * np.kron(sx, id)
+    #H += dkk * np.kron(sx, id)
 
     return H
 
@@ -194,6 +199,8 @@ def rates(eps, delta_Vl, delta_Vr, Gl_, Gr_, Gd_, t_, t_vf_, Bz=0.4, Bx=0, gs=2,
 
     # rate equation in basis indexed by eigenstate
     rate = np.zeros((N, N))
+    res_rate = np.zeros((N, N))
+    co_rate = np.zeros((N, N))
     cur = np.zeros(N)
     cur_L = np.zeros(N)
 
@@ -235,12 +242,12 @@ def rates(eps, delta_Vl, delta_Vr, Gl_, Gr_, Gd_, t_, t_vf_, Bz=0.4, Bx=0, gs=2,
             ei = e00  # initial energy
             ef = e11 + wh[jh] + we[je]  # final energy
             if ei >= ef or True:
-                rate[ind11(jh, je), 0] = (2. * t ** 2 * olap[jh, je] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
-                                          np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
+               rate[ind11(jh, je), 0] = (2. * t ** 2 * olap[jh, je] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
+                                        np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
                 # rate[ind11(jh, je), 0] = t ** 2 * olap[jh, je] * (G/np.pi)/((ef-ei)**2 + G**2)
                 # valley flip interdot tunneling
-                #rate[ind11(jh, je), 0] += (2 * t_vf ** 2 * olap_vf[jh, je] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
-                #                           np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
+               rate[ind11(jh, je), 0] += (2 * t_vf ** 2 * olap_vf[jh, je] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
+                                           np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
                 # rate[ind11(jh, je), 0] += t_vf ** 2 * olap_vf[jh, je] * (G/np.pi)/((ef-ei)**2 + G**2)
             # if ei > ef:
             #     rate[ind11(jh, je), 0] += 0.00 * t**2 * olap[jh, je]/Gd
@@ -252,11 +259,11 @@ def rates(eps, delta_Vl, delta_Vr, Gl_, Gr_, Gd_, t_, t_vf_, Bz=0.4, Bx=0, gs=2,
             ef = e00
             if ei >= ef or True:
                 rate[0, ind11(ih, ie)] = (2. * t ** 2 * olap[ih, ie] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
-                                          np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
+                                         np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
                 #rate[0, ind11(ih, ie)] = t ** 2 * olap[ih, ie] * (G/np.pi)/((ef-ei)**2 + G**2)
                 # valley flip interdot tunneling
-                #rate[0, ind11(ih, ie)] += (2 * t_vf ** 2 * olap_vf[ih, ie] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
-                 #                          np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
+                rate[0, ind11(ih, ie)] += (2 * t_vf ** 2 * olap_vf[ih, ie] * 1 / np.sqrt(2 * np.pi * Gd ** 2) *
+                                          np.exp(-(ef - ei) ** 2 / (2 * Gd ** 2)))
                 # rate[0, ind11(ih, ie)] += t_vf ** 2 * olap_vf[ih, ie]* (G/np.pi)/((ef-ei)**2 + G**2)
             # if ei > ef:
             #     rate[0, ind11(ih, ie)] += 0.00 * t**2 * olap[ih,ie] / Gd
@@ -348,6 +355,8 @@ def rates(eps, delta_Vl, delta_Vr, Gl_, Gr_, Gd_, t_, t_vf_, Bz=0.4, Bx=0, gs=2,
         rate[ind10(jh), 0] += rat
         cur_L[0] -= rat
 
+    res_rate = rate
+
     # Co-tunneling effects
     n = 0  # thermal offset (can be adjusted)
     m = 0  # optional broadening offset
@@ -410,6 +419,9 @@ def rates(eps, delta_Vl, delta_Vr, Gl_, Gr_, Gd_, t_, t_vf_, Bz=0.4, Bx=0, gs=2,
                 # Update rates
                 rate[0, ind11(jh, je)] += tco10  # (1,1) -> (0,0)
                 rate[ind11(jh, je), 0] += tco01  # (0,0) -> (1,1)
+
+                co_rate[0, ind11(jh, je)] += tco10  # (1,1) -> (0,0)
+                co_rate[ind11(jh, je), 0] += tco01  # (0,0) -> (1,1)
 
     # #"Spin" flip
     # # hole dot
@@ -486,8 +498,9 @@ def rates(eps, delta_Vl, delta_Vr, Gl_, Gr_, Gd_, t_, t_vf_, Bz=0.4, Bx=0, gs=2,
     # set the diagonal from prob conservation
     for j in range(N):
         rate[j, j] = -np.sum(rate[:, j])
+        co_rate[j, j] = -np.sum(rate[:, j])
 
-    return rate
+    return rate, res_rate, co_rate
 
 # for i in range(split):
 #     for j in range(split):
@@ -500,7 +513,7 @@ def compute_PLOT_element(i, eps, DVL_row, DVR_row, Gl_, Gr_, Gd_, t_, t_vf_,
                          Bz, Bx, gs, gv, soc, Vbias, t_f, P0, pulse_dir):
     row_vals = np.zeros(len(DVL_row))
     for j in range(len(DVR_row)):
-        rate = rates(eps, DVL_row[j], DVR_row[j], Gl_, Gr_, Gd_, t_, t_vf_,
+        rate, _, _ = rates(eps, DVL_row[j], DVR_row[j], Gl_, Gr_, Gd_, t_, t_vf_,
                          Bz, Bx, gs, gv, soc, Vbias)
         P = np.dot(expm(rate * t_f), P0)
         if pulse_dir == 1:
@@ -516,10 +529,11 @@ def compute_PLOT_parallel(args_list, PLOT, num_cpus=20):
     for i, vals in results:
         PLOT[i, :] = vals
 
-def plot_PLOT(DVL, DVR, PLOT, param, dir=None, middle=None):
+def plot_PLOT(DVL, DVR, PLOT, points, param, dir=None, middle=None):
     plt.pcolormesh(DVL, DVR, PLOT,
                    cmap="viridis_r", shading="auto", rasterized=True)
-    plt.scatter(0.75, -3.2)
+    for Vl, Vr in points:
+        plt.scatter(Vl, Vr)
     plt.title(f'B={param}')
     plt.colorbar()
     #plt.savefig(os.path.join(dir, f'{param}_map.svg'))
@@ -533,30 +547,117 @@ def read_parameters(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
 
-def decay_curve(eps, Vl, Vr, Gl_, Gr_, Gd_, t_, t_vf_,
-                Bz, Bx, gs, gv, soc, Vbias, t_f, P0,
-                pulse_dir, dir=None):
+def decay_curve(eps, DVL, DVR, points,
+                Gl_, Gr_, Gd_, t_, t_vf_, Bz, Bx, gs, gv, soc, Vbias,
+                t_f, P0, pulse_dir, out_dir, radius=2,
+                num_cpus=20):
 
-    times = np.linspace(0.01, 1.2, 100) * 10 ** 5
+    times = np.linspace(0.01, 5, 50) * 10 ** 5
     P_curve = []
-    for time in times:
-        rate = rates(eps, Vl, Vr, Gl_, Gr_, Gd_, t_, t_vf_,
-                     Bz, Bx, gs, gv, soc, Vbias)
-        P = np.dot(expm(rate * time), P0)
-        if pulse_dir == 1:
-            P_curve.append((np.sum(P[1:17])))
-        elif pulse_dir == -1:
-            P_curve.append((np.sum(P[0])))
+    rate_ratio = []
 
-    plt.scatter(times, P_curve)
-    plt.savefig(os.path.join(dir, f'decay.png'))
+    params = (Gl_, Gr_, Gd_, t_, t_vf_, Bz, Bx, gs, gv, soc, Vbias)
+
+    footprint = ski.morphology.disk(radius)
+
+    # points in region
+    poly = sort_polygon_vertices(points)
+    mask = create_mask(DVL, DVR, poly)
+
+    # erode mask
+    mask = ski.morphology.erosion(mask, footprint)
+
+    X = DVL[mask]
+    Y = DVR[mask]
+
+    base = [(x, y, eps, params, P0, pulse_dir)
+            for x, y in zip(X, Y)]
+
+    with Pool(num_cpus) as pool:
+        for time in times:
+
+            # Attach current time to each points args
+            args = [(bx, by, eps, params, time, P0, pulse_dir)
+                    for (bx, by, _, params, P0, pulse_dir) in base]
+
+            results = pool.map(_compute_point, args)
+
+            P, res_rates, co_rates = map(np.stack, zip(*results))
+
+            # Average over all valid points
+            P_curve.append(np.mean(P))
+            rate_ratio.append(np.max(res_rates))
+
+    # for time in times:
+    #     P_pre = []
+    #     for x, y in zip(Vl.ravel(), Vr.ravel()):
+    #         if is_point_in_polygon(x, y, points):
+    #             rate = rates(eps, x, y, Gl_, Gr_, Gd_, t_, t_vf_,
+    #                          Bz, Bx, gs, gv, soc, Vbias)
+    #             P = np.dot(expm(rate * time), P0)
+    #             P_pre.append(P)
+    #     if pulse_dir == 1:
+    #         P_fin = np.mean([np.sum(P[1:17]) for P in P_pre])
+    #         P_curve.append(P_fin)
+    #     elif pulse_dir == -1:
+    #         P_fin = np.mean([P[0] for P in P_pre])
+    #         P_curve.append(P_fin)
+    #     else:
+    #         raise ValueError("pulse_dir must be +1 or -1")
+
+    # --- Save & plot ---
+    plt.figure(figsize=(20, 12))
+    plt.plot(times, P_curve)
+    plt.ylim(1e-2, 1)
+    plt.yscale('log')
+    plt.savefig(os.path.join(out_dir, 'decay.png'))
     plt.close()
+
+    plt.figure(figsize=(12, 8))
+    plt.pcolormesh(DVL, DVR, mask, cmap='gray')
+    for x, y in points:
+        plt.scatter(x, y)
+    plt.savefig(os.path.join(out_dir, 'mask.png'))
+    plt.close()
+
+    np.save(os.path.join(out_dir, 'decay_curve.npy'), np.array(P_curve))
+    np.save(os.path.join(out_dir, 'rate_ratio.npy'), np.array(rate_ratio))
+    np.save(os.path.join(out_dir, 'decay_times.npy'), times)
+
+def create_mask(X, Y, poly):
+    points = np.vstack((X.ravel(), Y.ravel())).T
+    mask = Path(poly).contains_points(points)
+    return mask.reshape(X.shape)
+
+def sort_polygon_vertices(points):
+    points = np.array(points)
+
+    # centroid
+    center = points.mean(axis=0)
+    # compute angle
+    angles = np.arctan2(points[:, 1] - center[1],
+                        points[:, 0] - center[0])
+    # sort by angle
+    order = np.argsort(angles)
+
+    return points[order]
+
+def _compute_point(args):
+    x, y, eps, params, time, P0, pulse_dir = args
+
+    rate, res_rate, co_rate = rates(eps, x, y, *params)
+    P = expm(rate * time).dot(P0)
+
+    if pulse_dir == 1:
+        return np.sum(P[1:17]), np.sum(res_rate[1:17]), np.sum(co_rate[1:17])
+    else:
+        return P[0], res_rate, co_rate
 
 def compute_CUT_row(n_B, epsilon, DVl, DVr, Gl_, Gr_, Gd_, t_, t_vf_,
                     Bz, Bx, gs, gv, soc, Vbias, t_f, P0):
     row_vals = np.zeros(len(epsilon))
     for n_e, eps in enumerate(epsilon):
-        rate = rates(eps, DVl, DVr,
+        rate, _, _ = rates(eps, DVl, DVr,
                                   Gl_, Gr_, Gd_, t_, t_vf_,
                                   Bz, Bx, gs, gv, soc, Vbias)
         P = np.dot(expm(rate * t_f), P0)
@@ -628,8 +729,8 @@ def main(params=None, sim_dir=None):
     t_f = params["t_us"] * 10 ** 5
 
     split = params["split"]
-    delta_Vl = np.linspace(params["delta_Vl_start"], params["delta_Vl_stop"], split)
-    delta_Vr = np.linspace(params["delta_Vr_start"], params["delta_Vr_stop"], split)
+    delta_Vl = np.linspace(params["delta_Vl"]["start"], params["delta_Vl"]["stop"], split)
+    delta_Vr = np.linspace(params["delta_Vr"]["start"], params["delta_Vr"]["stop"], split)
     DVL, DVR = np.meshgrid(delta_Vl, delta_Vr)
 
     P0 = np.zeros(25)
@@ -692,13 +793,14 @@ def main(params=None, sim_dir=None):
         sim_dir = os.getcwd()
 
 
-    decay_curve(0, 0.75, -3.2, params["Gl"], params["Gr"],
-                params["Gd"], params["t"], params["t_vf"],
+    decay_curve(0, DVL, DVR, params["decay_points"],
+                params["Gl"], params["Gr"], params["Gd"], params["t"], params["t_vf"],
                 params["Bz"], params["Bx"], params["gs"], params["gv"],
                 params["soc"], params["Vbias"], t_f, P0, params["pulse_dir"], sim_dir)
 
     compute_PLOT_parallel(PLOT=PLOT, args_list=args_list)
-    plot_PLOT(DVL=DVL, DVR=DVR, PLOT=PLOT, param=params["t_us"], dir=sim_dir)
+    plot_PLOT(DVL=DVL, DVR=DVR, PLOT=PLOT, points=params["decay_points"],
+              param=params["t_us"], dir=sim_dir)
 
     #print_states(params["Bz"], params["Bx"], params["gs"], params["gv"], params["soc"], sim_dir)
 
@@ -718,7 +820,7 @@ def main(params=None, sim_dir=None):
 
 
 if __name__ == '__main__':
-    dir_name = 'blockade_vs_tus'
+    dir_name = 'transport_vs_tus_1T_reg2'
     current_dir = os.getcwd()
     sim_dir = os.path.join(current_dir, dir_name)
     parameter_file = os.path.join(sim_dir, 'params.json')  # Path to your parameter file
