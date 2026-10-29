@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+
+# Generated simulation and fitting outputs.
+/runs/
+
+# Generated figures and local exploratory artifacts.
+/figures/
+
+# Local snapshots / nested repository copies.
+/archive/
